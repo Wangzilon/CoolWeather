@@ -39,4 +39,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation("org.litepal.guolindev:core:3.2.3")     //数据库
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")  //服务器交互
+    implementation("com.google.code.gson:gson:2.8.2")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")  //用于下拉刷新天气信息
 }
