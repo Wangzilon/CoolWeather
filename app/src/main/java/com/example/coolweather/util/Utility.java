@@ -89,4 +89,21 @@ public class Utility {
     private interface ResponseHandler {
         void handleResponse(JSONArray jsonArray) throws JSONException;
     }
+
+    //处理背景图片
+    public static String handleBingPicResponse(String response) {
+        //处理返回的JSON数据，获取背景图片
+        //try catch用于捕捉异常
+        try {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("images");
+            JSONObject jsonObject1 = jsonArray.getJSONObject(0);
+            String url = jsonObject1.getString("url");
+            String bingPic = "https://cn.bing.com" + url;
+            return bingPic;
+        }catch (Exception e){
+            throw new RuntimeException(e);
+
+        }
+    }
 }

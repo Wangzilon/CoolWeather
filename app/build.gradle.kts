@@ -43,4 +43,5 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")  //服务器交互
     implementation("com.google.code.gson:gson:2.8.2")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")  //用于下拉刷新天气信息
+    implementation("com.github.bumptech.glide:glide:4.14.2")  //用于加载背景图片
 }

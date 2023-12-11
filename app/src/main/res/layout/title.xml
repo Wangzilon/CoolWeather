@@ -18,8 +18,9 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:text="城市名"
+        android:textStyle="bold"
         android:textColor="@color/white"
-        android:textSize="20sp" />
+        android:textSize="40sp" />
 
     <TextView
         android:id="@+id/title_update_time"
@@ -30,6 +31,6 @@
         android:text="更新时间"
         android:textColor="@color/white"
         android:layout_alignParentRight="true"
-        android:textSize="16sp" />
+        android:textSize="25sp" />
 
 </RelativeLayout>

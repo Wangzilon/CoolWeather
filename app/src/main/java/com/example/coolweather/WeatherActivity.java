@@ -2,21 +2,28 @@ package com.example.coolweather;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.coolweather.json.Forecast;
 import com.example.coolweather.json.Weather;
+import com.example.coolweather.service.AutoUpdateService;
 import com.example.coolweather.util.HttpUtil;
 import com.example.coolweather.util.Utility;
 
@@ -38,8 +45,11 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView carWashText;
     private TextView sportText;
     private ScrollView weatherLayout;  // 天气数据滚动信息
-    private SwipeRefreshLayout swipeRefresh;  //下拉刷新
+    public SwipeRefreshLayout swipeRefresh;  //下拉刷新
     private String mWeatherId;  //当前的天气ID
+    private Button navButton;  //城市切换按钮
+    public DrawerLayout drawerLayout;  //城市切换的滑动菜单
+    private ImageView bingPicImg;  //显示背景图片
 
 
     @Override
@@ -62,7 +72,9 @@ public class WeatherActivity extends AppCompatActivity {
         sportText = (TextView) findViewById(R.id.sport_text);
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         swipeRefresh.setColorSchemeColors(getResources().getColor(R.color.swiperRefresh_color));
-
+        navButton = (Button) findViewById(R.id.nav_btn);  //城市切换按钮
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout); //切换城市的滑动菜单
+        bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);  //背景图片控件
 
         //从本地缓存中获取数据（SharedPreferences）本质上以键值对的形式存储数据
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -87,7 +99,55 @@ public class WeatherActivity extends AppCompatActivity {
                 requestWeather(mWeatherId);
             }
         });
+
+        // 点击切换按钮，出现滑动菜单，实现地点的切换
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+
+        //动态加载背景图片，优先从缓存器中获取数据
+        String bingPic = prefs.getString("bing_pic", null);  //从服务器中获取
+        if(bingPic != null){
+            //缓存不为空，则直接显示
+            Glide.with(this).load(bingPic).into(bingPicImg);
+        }else{
+            //缓存为空，则从服务器中申请
+            loadBingPic();
+        }
+
     }
+
+    //从服务器中申请背景图片
+    private void loadBingPic(){
+        String requestBingPic = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=5&n=1";
+        HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
+                    @Override
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        final String bingPicResponse = response.body().string();
+                        String bingPic = Utility.handleBingPicResponse(bingPicResponse);  //解析返回的JSON数据
+                        //存入缓存器
+                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                        editor.putString("bing_pic",bingPic);
+                        editor.apply();
+                        //背景图片显示
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
+                            }
+                        });
+                    }
+
+                    @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+    });
+    }
+
 
     //将天气信息显示在界面上
     private void showWeatherInfo(Weather weather) {
@@ -135,6 +195,9 @@ public class WeatherActivity extends AppCompatActivity {
 
         weatherLayout.setVisibility(View.VISIBLE);
 
+        //激活定时更新服务
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 
     //从服务器中申请天气信息数据
